@@ -7,4 +7,4 @@ a3/test_root/*
 *.pyc
 *.zip
 .idea/*
-.vscode/*
+.vscode
