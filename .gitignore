@@ -8,3 +8,5 @@ a3/test_root/*
 *.zip
 .idea/*
 .vscode
+
+.vscode/*
