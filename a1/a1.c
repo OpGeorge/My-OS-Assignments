@@ -126,12 +126,7 @@ void listare(int recursiv, int size_greater, int has_perm, char *path)
             snprintf(filePath, 512, "%s/%s", path, entry->d_name);
             if (lstat(filePath, &statbuff) == 0)
             {
-                if (S_ISDIR(statbuff.st_mode) && recursiv == 1)
-                {
-                    listare(recursiv, size_greater, has_perm, filePath);
-                    if (size_greater > 0)
-                        continue;
-                }
+                
                 if (has_perm == 1)
                 {
 
@@ -150,6 +145,12 @@ void listare(int recursiv, int size_greater, int has_perm, char *path)
                 else
                 {
                     printf("%s\n", filePath);
+                }
+
+                if (S_ISDIR(statbuff.st_mode) && recursiv == 1)
+                {
+                     listare(recursiv, size_greater, has_perm, filePath);
+                   
                 }
             }
         }
