@@ -10,9 +10,12 @@
 
 sem_t sem5Inceput;
 sem_t sem3Sfarsit;
-sem_t * sem2_1Sfrasit;
-sem_t  * sem6_3Sfrasit;
-
+sem_t *sem2_1Sfrasit;
+sem_t *sem6_3Sfrasit;
+sem_t sem4Sync;
+sem_t sem11Sync;
+sem_t semInc;
+int nrThreadsin4 = 0;
 // if(fork()==0)
 //  {
 //      create new thread;
@@ -74,12 +77,45 @@ void *thread6Func(void *arg)
     info(BEGIN, 6, i);
 
     info(END, 6, i);
-    
-    if(i==3)
+
+    if (i == 3)
     {
-        sem_post(sem6_3Sfrasit); 
+        sem_post(sem6_3Sfrasit);
     }
 
+    return NULL;
+}
+
+void *threadP4Func(void *arg)
+{
+    int i;
+    i = *(int *)arg;
+
+    sem_wait(&sem4Sync);
+
+    sem_wait(&semInc);
+    nrThreadsin4++;
+    sem_post(&semInc);
+
+    if (i == 11)
+    {
+        sem_wait(&sem11Sync);
+    }
+
+    while(i==11 && nrThreadsin4 <4)
+        ;
+    info(BEGIN, 4, i);
+
+    if (i != 11)
+        sem_wait(&sem11Sync);
+
+    info(END, 4, i);
+
+    nrThreadsin4--;
+
+    sem_post(&sem11Sync);
+
+    sem_post(&sem4Sync);
     return NULL;
 }
 
@@ -95,7 +131,6 @@ void p6create()
     int threadsID[6];
     pthread_t p6Arr[6];
 
-
     int i;
     for (i = 0; i < 6; i++)
     {
@@ -107,7 +142,6 @@ void p6create()
     {
         pthread_join(p6Arr[i], NULL);
     }
-
 
     while ((wait(NULL) > 0))
         ;
@@ -202,8 +236,29 @@ void p4create()
 {
     info(BEGIN, 4, 0);
 
+    int threadsID[45];
+    pthread_t p4Arr[45];
+    nrThreadsin4 = 0;
+    sem_init(&sem4Sync, 0, 4);
+    sem_init(&sem11Sync, 0, 1);
+    sem_init(&semInc, 0, 1);
+    int i;
+    for (i = 0; i < 45; i++)
+    {
+        threadsID[i] = i + 1;
+        pthread_create(&p4Arr[i], NULL, threadP4Func, &threadsID[i]);
+    }
+
+    for (i = 0; i < 45; i++)
+    {
+        pthread_join(p4Arr[i], NULL);
+    }
+
     while ((wait(NULL) > 0))
         ;
+    sem_destroy(&sem4Sync);
+    sem_destroy(&sem11Sync);
+    sem_destroy(&semInc);
 
     info(END, 4, 0);
 }
@@ -212,15 +267,14 @@ int main()
 {
     init();
 
-   
     sem_unlink("sem2_1Sfrasit");
-   
+
     sem_unlink("sem6_3Sfrasit");
 
     info(BEGIN, 1, 0);
-        sem2_1Sfrasit = sem_open("sem2_1Sfrasit", O_CREAT, 0644, 0);
+    sem2_1Sfrasit = sem_open("sem2_1Sfrasit", O_CREAT, 0644, 0);
 
-    sem6_3Sfrasit =sem_open("sem6_3Sfrasit", O_CREAT, 0644, 0);
+    sem6_3Sfrasit = sem_open("sem6_3Sfrasit", O_CREAT, 0644, 0);
 
     if (fork() == 0)
     {
@@ -235,7 +289,7 @@ int main()
     while ((wait(NULL) > 0))
         ;
     info(END, 1, 0);
-        sem_close(sem2_1Sfrasit);
+    sem_close(sem2_1Sfrasit);
     sem_close(sem6_3Sfrasit);
     return 0;
 }
